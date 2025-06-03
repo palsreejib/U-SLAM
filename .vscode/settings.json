@@ -1,0 +1,32 @@
+{
+    "python.autoComplete.extraPaths": [
+        "/home/sreejib/p2_ws/install/underwater_slam/lib/python3.10/site-packages",
+        "/home/sreejib/p2_ws/install/sonar_processing/lib/python3.10/site-packages",
+        "/home/sreejib/p2_ws/install/image_tracking/lib/python3.10/site-packages",
+        "/home/sreejib/p2_ws/install/dvl_odometry/lib/python3.10/site-packages",
+        "/home/sreejib/ros3_ws/install/actions_py/lib/python3.10/site-packages",
+        "/home/sreejib/ros3_ws/install/my_robot_interfaces/local/lib/python3.10/dist-packages",
+        "/home/sreejib/ros3_ws/install/lifecycle_py/lib/python3.10/site-packages",
+        "/home/sreejib/ros3_ws/install/executors_py/lib/python3.10/site-packages",
+        "/home/sreejib/ros3_ws/install/components_py/lib/python3.10/site-packages",
+        "/home/sreejib/install/my_robot_interfaces/local/lib/python3.10/dist-packages",
+        "/home/sreejib/install/actions_py/lib/python3.10/site-packages",
+        "/opt/ros/humble/lib/python3.10/site-packages",
+        "/opt/ros/humble/local/lib/python3.10/dist-packages"
+    ],
+    "python.analysis.extraPaths": [
+        "/home/sreejib/p2_ws/install/underwater_slam/lib/python3.10/site-packages",
+        "/home/sreejib/p2_ws/install/sonar_processing/lib/python3.10/site-packages",
+        "/home/sreejib/p2_ws/install/image_tracking/lib/python3.10/site-packages",
+        "/home/sreejib/p2_ws/install/dvl_odometry/lib/python3.10/site-packages",
+        "/home/sreejib/ros3_ws/install/actions_py/lib/python3.10/site-packages",
+        "/home/sreejib/ros3_ws/install/my_robot_interfaces/local/lib/python3.10/dist-packages",
+        "/home/sreejib/ros3_ws/install/lifecycle_py/lib/python3.10/site-packages",
+        "/home/sreejib/ros3_ws/install/executors_py/lib/python3.10/site-packages",
+        "/home/sreejib/ros3_ws/install/components_py/lib/python3.10/site-packages",
+        "/home/sreejib/install/my_robot_interfaces/local/lib/python3.10/dist-packages",
+        "/home/sreejib/install/actions_py/lib/python3.10/site-packages",
+        "/opt/ros/humble/lib/python3.10/site-packages",
+        "/opt/ros/humble/local/lib/python3.10/dist-packages"
+    ]
+}

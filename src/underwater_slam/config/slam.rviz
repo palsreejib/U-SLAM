@@ -1,0 +1,39 @@
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+  - Class: rviz_common/Views
+    Name: Views
+Visualization Manager:
+  Displays:
+    - Class: rviz_default_plugins/OccupancyGrid
+      Topic: /slam/map
+      Color Scheme: costmap
+      Alpha: 0.8
+    
+    - Class: rviz_default_plugins/TF
+      Marker Scale: 0.5
+    
+    - Class: rviz_default_plugins/PointCloud2
+      Topic: /sonar/pointcloud
+      Size: 0.1
+    
+    - Class: rviz_default_plugins/Image
+      Topic: /camera/image_raw
+      Transport: raw
+    
+    - Class: rviz_default_plugins/MarkerArray
+      Topic: /slam/map_markers
+  
+  Global Options:
+    Fixed Frame: map  # Must match your SLAM frame!
+    
+  Views:
+    Current:
+      Class: rviz_default_plugins/Orbit
+      Name: Current View
+      Target Frame: base_link
+      Distance: 10.0
+      Focal Point:
+        X: 0
+        Y: 0
+        Z: 0

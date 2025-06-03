@@ -1,0 +1,35 @@
+Visualization Manager:
+  Fixed Frame: map  # Set this to your robot's base frame (e.g., base_link or map)
+  Global Options:
+    Background Color: 0; 0; 0  # Black background
+
+  Displays:
+    - Name: RobotModel
+      Type: rviz_default_plugins/RobotModel
+      Description Topic: /robot_description
+      Enabled: true
+
+    - Name: TF
+      Type: rviz_default_plugins/TF
+      Show Names: true
+      Marker Scale: 0.5  # Adjust the size of TF markers
+
+    - Name: PoseArray
+      Type: rviz_default_plugins/PoseArray
+      Topic: /auv/pose_estimates
+      Color: 255; 0; 0  # Red particles for localization
+
+    - Name: Odometry
+      Type: rviz_default_plugins/Odometry
+      Topic: /auv/odometry
+      Color: 0; 255; 0  # Green trajectory
+
+    - Name: PointCloud2
+      Type: rviz_default_plugins/PointCloud2
+      Topic: /sonar/pointcloud
+      Color Transformer: Intensity  # Ensure your point cloud has intensity values
+      Size (m): 0.1  # Adjust based on your data
+
+    - Name: Image
+      Type: rviz_default_plugins/Image
+      Topic: /camera/image_raw

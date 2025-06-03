@@ -1,0 +1,21 @@
+<launch xmlns:launch="http://www.ros.org/schema/launch">
+    <!-- Launch the SLAM node -->
+    <node pkg="underwater_slam" exec="slam" name="slam_node" output="screen"/>
+
+    <!-- Launch the Image Publisher -->
+    <node pkg="image_tracking" exec="image_publisher" name="image_publisher" output="screen"/>
+
+    <!-- Launch the SONAR Publisher -->
+    <node pkg="sonar_processing" exec="sonar_publisher" name="sonar_publisher" output="screen"/>
+
+    <!-- Launch the DVL Publisher -->
+    <node pkg="dvl_odometry" exec="dvl_publisher" name="dvl_publisher" output="screen"/>
+
+    <!-- Load the AUV URDF using robot_state_publisher -->
+    <node pkg="robot_state_publisher" exec="robot_state_publisher" name="robot_state_publisher" output="screen">
+        <param name="robot_description" value="$(find-pkg-share auv_bringup)/urdf/auv.urdf"/>
+    </node>
+
+    <!-- Launch RViz -->
+    <node pkg="rviz2" exec="rviz2" name="rviz" output="screen" args="-d $(find-pkg-share auv_bringup)/rviz/slam_config.rviz"/>
+</launch>
