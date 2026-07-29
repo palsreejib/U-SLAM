@@ -1,0 +1,38 @@
+# =========================
+# ROS 2 Build Artifacts
+# =========================
+ros_ws/build/
+ros_ws/install/
+ros_ws/log/
+
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*.pyo
+
+# =========================
+# VS Code
+# =========================
+.vscode/
+
+# =========================
+# Linux
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# Dataset (generated)
+# =========================
+datasets/raw/
+datasets/processed/
+
+# Keep sample datasets
+!datasets/sample/
+
+# =========================
+# Experiment outputs
+# =========================
+results/
