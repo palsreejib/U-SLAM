@@ -1,9 +1,9 @@
 # =========================
 # ROS 2 Build Artifacts
 # =========================
-ros_ws/build/
-ros_ws/install/
-ros_ws/log/
+U-SLAM_ws/build/
+U-SLAM_ws/install/
+U-SLAM_ws/log/
 
 # =========================
 # Python
