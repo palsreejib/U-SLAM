@@ -55,15 +55,7 @@ This repository is an evolving research and engineering project.
 Expect:
 - Partial/incomplete features
 - Refactoring over time
-- Documentation to grow alongside development
-
----
-
-## Contact
-
-For updates, collaborations, or questions, feel free to reach out.
-
-**Author:** Sreejib Pal  
+- Documentation to grow alongside development 
 sreejib1945@gmail.com  
 
 ---
