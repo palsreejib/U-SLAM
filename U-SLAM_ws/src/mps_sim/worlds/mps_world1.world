@@ -1,0 +1,233 @@
+<?xml version="1.0"?>
+<!--
+  World 1 — Structured environment for MPS + FLS fusion testing
+  Gazebo Classic 11
+
+  Geometric obstacles only (no mesh/asset dependencies — this world
+  builds and runs with zero extra downloads):
+    - Pipes: cylinders at varied yaw/pitch, some crossing at angles
+    - Rocks: clustered irregular boxes/spheres, scattered
+    - Walls: flat panels at varied angles forming a loose corridor,
+      useful later for loop-closure testing
+
+  Also loads libgazebo_ros_state.so — this is what makes
+  /gazebo/model_states exist at all. Without this plugin the ground
+  truth logger has nothing to subscribe to.
+-->
+<sdf version="1.6">
+  <world name="mps_world1">
+
+    <physics type="ode">
+      <real_time_update_rate>1000</real_time_update_rate>
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1</real_time_factor>
+      <ode>
+        <solver>
+          <type>quick</type>
+          <iters>150</iters>
+          <precon_iters>0</precon_iters>
+          <sor>1.400000</sor>
+        </solver>
+        <constraints>
+          <cfm>0.00001</cfm>
+          <erp>0.2</erp>
+          <contact_max_correcting_vel>2000</contact_max_correcting_vel>
+          <contact_surface_layer>0.01</contact_surface_layer>
+        </constraints>
+      </ode>
+    </physics>
+
+    <!-- ── Ground truth publisher ──────────────────────────────────
+         Publishes /gazebo/model_states (gazebo_msgs/ModelStates) at
+         50Hz. ground_truth_node.py subscribes to this and republishes
+         our vehicle's pose/twist as nav_msgs/Odometry.
+    ─────────────────────────────────────────────────────────────── -->
+    <plugin name="gazebo_ros_state" filename="libgazebo_ros_state.so">
+      <ros>
+        <namespace>/gazebo</namespace>
+      </ros>
+      <update_rate>50.0</update_rate>
+    </plugin>
+
+    <include>
+      <uri>model://sun</uri>
+    </include>
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <!-- ══════════════════════════════════════════════════════════
+         PIPES — cylinders at varied angles
+         ══════════════════════════════════════════════════════════ -->
+
+    <!-- Long pipe, flat on ground, angled 30° -->
+    <model name="pipe_1">
+      <static>true</static>
+      <pose>4 1 0.25 1.5708 0 0.5236</pose>
+      <link name="link">
+        <collision name="col"><geometry><cylinder><radius>0.2</radius><length>4.0</length></cylinder></geometry></collision>
+        <visual name="vis"><geometry><cylinder><radius>0.2</radius><length>4.0</length></cylinder></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Grey</name></script></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Pipe crossing at a steep angle, partially raised -->
+    <model name="pipe_2">
+      <static>true</static>
+      <pose>6.5 -2 0.6 1.2 0.3 -0.7854</pose>
+      <link name="link">
+        <collision name="col"><geometry><cylinder><radius>0.15</radius><length>3.2</length></cylinder></geometry></collision>
+        <visual name="vis"><geometry><cylinder><radius>0.15</radius><length>3.2</length></cylinder></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/DarkGrey</name></script></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Short vertical pipe stub -->
+    <model name="pipe_3">
+      <static>true</static>
+      <pose>2 -4 0.75 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><cylinder><radius>0.18</radius><length>1.5</length></cylinder></geometry></collision>
+        <visual name="vis"><geometry><cylinder><radius>0.18</radius><length>1.5</length></cylinder></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Grey</name></script></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Pipe elbow-like pair, perpendicular junction -->
+    <model name="pipe_4a">
+      <static>true</static>
+      <pose>-3 3 0.3 1.5708 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><cylinder><radius>0.18</radius><length>3.0</length></cylinder></geometry></collision>
+        <visual name="vis"><geometry><cylinder><radius>0.18</radius><length>3.0</length></cylinder></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/DarkGrey</name></script></material>
+        </visual>
+      </link>
+    </model>
+    <model name="pipe_4b">
+      <static>true</static>
+      <pose>-4.5 4.5 0.3 1.5708 0 1.5708</pose>
+      <link name="link">
+        <collision name="col"><geometry><cylinder><radius>0.18</radius><length>3.0</length></cylinder></geometry></collision>
+        <visual name="vis"><geometry><cylinder><radius>0.18</radius><length>3.0</length></cylinder></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/DarkGrey</name></script></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ══════════════════════════════════════════════════════════
+         ROCKS — clustered irregular primitives (no mesh assets needed)
+         ══════════════════════════════════════════════════════════ -->
+
+    <model name="rock_cluster_1">
+      <static>true</static>
+      <pose>-5 -3 0 0 0 0</pose>
+      <link name="link">
+        <collision name="c1"><pose>0 0 0.3 0.2 0.1 0.4</pose><geometry><box><size>0.9 0.7 0.6</size></box></geometry></collision>
+        <visual name="v1"><pose>0 0 0.3 0.2 0.1 0.4</pose><geometry><box><size>0.9 0.7 0.6</size></box></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Grey</name></script></material>
+        </visual>
+        <collision name="c2"><pose>0.5 0.3 0.2 0.1 0.3 -0.3</pose><geometry><box><size>0.5 0.5 0.4</size></box></geometry></collision>
+        <visual name="v2"><pose>0.5 0.3 0.2 0.1 0.3 -0.3</pose><geometry><box><size>0.5 0.5 0.4</size></box></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/DarkGrey</name></script></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="rock_cluster_2">
+      <static>true</static>
+      <pose>3 5 0 0 0 0</pose>
+      <link name="link">
+        <collision name="c1"><pose>0 0 0.4 0.3 0.2 1.1</pose><geometry><box><size>1.1 0.8 0.8</size></box></geometry></collision>
+        <visual name="v1"><pose>0 0 0.4 0.3 0.2 1.1</pose><geometry><box><size>1.1 0.8 0.8</size></box></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Grey</name></script></material>
+        </visual>
+        <collision name="c2"><pose>-0.6 0.4 0.15 0 0.1 0.6</pose><geometry><sphere><radius>0.35</radius></sphere></geometry></collision>
+        <visual name="v2"><pose>-0.6 0.4 0.15 0 0.1 0.6</pose><geometry><sphere><radius>0.35</radius></sphere></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/DarkGrey</name></script></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="rock_small_1">
+      <static>true</static>
+      <pose>-2 -6 0.2 0.4 0.2 0.9</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>0.5 0.4 0.4</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>0.5 0.4 0.4</size></box></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Grey</name></script></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="rock_small_2">
+      <static>true</static>
+      <pose>7 3 0.15 0.1 0.5 -0.5</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>0.4 0.35 0.3</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>0.4 0.35 0.3</size></box></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/DarkGrey</name></script></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ══════════════════════════════════════════════════════════
+         WALLS — flat panels at varied angles (loose corridor)
+         ══════════════════════════════════════════════════════════ -->
+
+    <model name="wall_1">
+      <static>true</static>
+      <pose>0 6 0.75 0 0 0.2</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>5.0 0.25 1.5</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>5.0 0.25 1.5</size></box></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Yellow</name></script></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="wall_2">
+      <static>true</static>
+      <pose>-6 0 0.75 0 0 1.396</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>4.5 0.25 1.5</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>4.5 0.25 1.5</size></box></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Yellow</name></script></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="wall_3">
+      <static>true</static>
+      <pose>8 -3 0.75 0 0 1.0472</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>4.0 0.25 1.5</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>4.0 0.25 1.5</size></box></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Yellow</name></script></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="wall_4">
+      <static>true</static>
+      <pose>-3 -8 0.75 0 0 -0.4</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>5.5 0.25 1.5</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>5.5 0.25 1.5</size></box></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Yellow</name></script></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- GUI camera start view -->
+    <gui>
+      <camera name="user_camera">
+        <pose>-14 -14 10 0 0.5 0.78</pose>
+      </camera>
+    </gui>
+
+  </world>
+</sdf>

@@ -1,0 +1,126 @@
+<?xml version="1.0"?>
+<!--
+  MPS test world — Gazebo Classic 11
+  Flat ground plane with a few box obstacles scattered around
+  the vehicle spawn point so the sonar has something meaningful
+  to return from at various bearings.
+-->
+<sdf version="1.6">
+  <world name="mps_test">
+
+    <!-- Physics: real-time factor 1.0, 1ms timestep -->
+    <physics type="ode">
+      <real_time_update_rate>1000</real_time_update_rate>
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1</real_time_factor>
+      <ode>
+        <solver>
+          <type>quick</type>
+          <iters>150</iters>
+          <precon_iters>0</precon_iters>
+          <sor>1.400000</sor>
+        </solver>
+        <constraints>
+          <cfm>0.00001</cfm>
+          <erp>0.2</erp>
+          <contact_max_correcting_vel>2000</contact_max_correcting_vel>
+          <contact_surface_layer>0.01</contact_surface_layer>
+        </constraints>
+      </ode>
+    </physics>
+
+    <!-- Lighting -->
+    <include>
+      <uri>model://sun</uri>
+    </include>
+
+    <!-- Ground plane -->
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <!-- ── Obstacle ring around vehicle spawn ───────────────────
+         Vehicle spawns at (0,0,0.5). Boxes are at various distances
+         and bearings so each sweep sector gets real returns.
+    ────────────────────────────────────────────────────────────── -->
+
+    <!-- North ~5m -->
+    <model name="box_N">
+      <static>true</static>
+      <pose>5 0 0.5 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>1 0.5 1</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>1 0.5 1</size></box></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri>
+            <name>Gazebo/Grey</name></script></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- NE ~7m -->
+    <model name="box_NE">
+      <static>true</static>
+      <pose>5 5 0.5 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>0.8 0.8 1.2</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>0.8 0.8 1.2</size></box></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri>
+            <name>Gazebo/Red</name></script></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- East ~10m -->
+    <model name="box_E">
+      <static>true</static>
+      <pose>10 0 0.5 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>0.5 2 1</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>0.5 2 1</size></box></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri>
+            <name>Gazebo/Blue</name></script></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- South ~6m -->
+    <model name="box_S">
+      <static>true</static>
+      <pose>-6 0 0.5 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>1.5 0.5 0.8</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>1.5 0.5 0.8</size></box></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri>
+            <name>Gazebo/Green</name></script></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- West ~8m -->
+    <model name="box_W">
+      <static>true</static>
+      <pose>0 -8 0.5 0 0 0</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>0.5 0.5 1.5</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>0.5 0.5 1.5</size></box></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri>
+            <name>Gazebo/Yellow</name></script></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- SW diagonal ~12m -->
+    <model name="wall_SW">
+      <static>true</static>
+      <pose>-8 -8 0.5 0 0 0.785</pose>
+      <link name="link">
+        <collision name="col"><geometry><box><size>4 0.2 1</size></box></geometry></collision>
+        <visual name="vis"><geometry><box><size>4 0.2 1</size></box></geometry>
+          <material><script><uri>file://media/materials/scripts/gazebo.material</uri>
+            <name>Gazebo/Orange</name></script></material>
+        </visual>
+      </link>
+    </model>
+
+  </world>
+</sdf>

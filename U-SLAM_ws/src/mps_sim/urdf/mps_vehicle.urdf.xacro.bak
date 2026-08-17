@@ -1,0 +1,426 @@
+<?xml version="1.0"?>
+<robot name="mps_vehicle" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- ============================================================
+       Standalone test vehicle with a Mechanical Profiling Sonar
+       Gazebo Classic 11 + ROS 2 Humble
+
+       Structure:
+         base_link  (cylinder body, ~AUV-shaped)
+           └─ mps_mount_link  (fixed offset from base, where head sits)
+                └─ mps_head_link  (the rotating transducer head)
+                     └─ ray sensor  (single narrow beam, 1 sample)
+
+       The mps_rotate_joint is CONTINUOUS — the Python driver node
+       commands angle positions via /mps/joint/cmd and the Gazebo
+       joint controller moves it. One ray is fired each step.
+  ============================================================ -->
+
+  <!-- ── Tunable FLS parameters (project spec: 120° FOV, 10m, 15Hz) ──
+       Override at build time: xacro mps_vehicle.urdf.xacro fls_max_range:=8
+  ──────────────────────────────────────────────────────────────── -->
+  <xacro:arg name="fls_horizontal_fov_deg" default="120.0"/>
+  <xacro:arg name="fls_max_range"          default="10.0"/>
+  <xacro:arg name="fls_update_rate"        default="15.0"/>
+  <xacro:property name="fls_fov_deg_str" value="$(arg fls_horizontal_fov_deg)"/>
+  <xacro:property name="fls_max_range_str" value="$(arg fls_max_range)"/>
+  <xacro:property name="fls_update_rate_str" value="$(arg fls_update_rate)"/>
+  <xacro:property name="fls_hfov_rad" value="${float(fls_fov_deg_str) * pi / 180.0}"/>
+
+  <!-- ── Materials ─────────────────────────────────────────────── -->
+  <material name="dark_grey">
+    <color rgba="0.2 0.2 0.2 1.0"/>
+  </material>
+  <material name="yellow">
+    <color rgba="0.9 0.8 0.0 1.0"/>
+  </material>
+  <material name="teal">
+    <color rgba="0.0 0.6 0.6 1.0"/>
+  </material>
+  <material name="orange">
+    <color rgba="0.85 0.45 0.1 1.0"/>
+  </material>
+
+  <!-- ── Base link (vehicle body) ──────────────────────────────── -->
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <cylinder radius="0.15" length="0.8"/>
+      </geometry>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <material name="dark_grey"/>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder radius="0.15" length="0.8"/>
+      </geometry>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+    </collision>
+    <inertial>
+      <mass value="20.0"/>
+      <origin xyz="0 0 0"/>
+      <inertia ixx="0.5" ixy="0.0" ixz="0.0"
+               iyy="0.5" iyz="0.0" izz="0.2"/>
+    </inertial>
+  </link>
+
+  <!-- ── MPS mount (fixed to vehicle top) ─────────────────────── -->
+  <link name="mps_mount_link">
+    <visual>
+      <geometry>
+        <cylinder radius="0.04" length="0.05"/>
+      </geometry>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <material name="dark_grey"/>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder radius="0.04" length="0.05"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.2"/>
+      <inertia ixx="0.001" ixy="0" ixz="0"
+               iyy="0.001" iyz="0" izz="0.001"/>
+    </inertial>
+  </link>
+
+  <joint name="mps_mount_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="mps_mount_link"/>
+    <!-- Sit on top of the vehicle body -->
+    <origin xyz="0 0 0.18" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ── MPS rotating head ─────────────────────────────────────── -->
+  <link name="mps_head_link">
+    <visual>
+      <geometry>
+        <cylinder radius="0.03" length="0.06"/>
+      </geometry>
+      <origin xyz="0 0 0.03" rpy="0 0 0"/>
+      <material name="yellow"/>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder radius="0.03" length="0.06"/>
+      </geometry>
+      <origin xyz="0 0 0.03"/>
+    </collision>
+    <inertial>
+      <mass value="0.1"/>
+      <inertia ixx="0.0001" ixy="0" ixz="0"
+               iyy="0.0001" iyz="0" izz="0.0001"/>
+    </inertial>
+  </link>
+
+  <!-- This is the joint the driver node commands each step -->
+  <joint name="mps_rotate_joint" type="continuous">
+    <parent link="mps_mount_link"/>
+    <child link="mps_head_link"/>
+    <origin xyz="0 0 0.025" rpy="0 0 0"/>
+    <!-- Rotation around Z = horizontal bearing sweep -->
+    <axis xyz="0 0 1"/>
+    <dynamics damping="0.01" friction="0.0"/>
+  </joint>
+
+  <!-- ── ros2_control hardware interface (ROS 2 Humble) ────────────
+       This replaces the old ROS1 <transmission> tag style. It tells
+       gazebo_ros2_control which joint to expose and which command/
+       state interfaces are available.
+  ──────────────────────────────────────────────────────────────── -->
+  <ros2_control name="mps_head_hardware" type="system">
+    <hardware>
+      <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+    </hardware>
+    <joint name="mps_rotate_joint">
+      <command_interface name="position"/>
+      <state_interface name="position">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity"/>
+    </joint>
+  </ros2_control>
+
+  <!-- ── Gazebo: gazebo_ros2_control plugin ────────────────────────
+       Correct ROS 2 plugin (NOT the ROS1 gazebo_ros_control plugin).
+       Loads controller_manager and controllers.yaml.
+  ──────────────────────────────────────────────────────────────── -->
+  <gazebo>
+    <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
+      <parameters>$(find mps_sim)/config/controllers.yaml</parameters>
+    </plugin>
+  </gazebo>
+
+  <!-- ── Ray sensor on the rotating head ──────────────────────── -->
+  <!--
+    Single beam: 1 horizontal sample, very narrow FOV.
+    This is the acoustic pulse. Range and noise are set here;
+    additional per-bearing noise is applied in the Python driver.
+    The sensor fires whenever Gazebo updates — the driver reads
+    /mps/raw_range on each step.
+  -->
+  <gazebo reference="mps_head_link">
+    <sensor type="ray" name="mps_ray_sensor">
+      <pose>0 0 0.06 0 0 0</pose>
+      <visualize>true</visualize>
+      <update_rate>100</update_rate>  <!-- high rate; driver controls actual step rate -->
+      <ray>
+        <scan>
+          <horizontal>
+            <samples>1</samples>
+            <resolution>1</resolution>
+            <min_angle>-0.008727</min_angle>  <!-- ±0.5 deg beam width -->
+            <max_angle>0.008727</max_angle>
+          </horizontal>
+          <vertical>
+            <samples>1</samples>
+            <resolution>1</resolution>
+            <min_angle>-0.008727</min_angle>
+            <max_angle>0.008727</max_angle>
+          </vertical>
+        </scan>
+        <range>
+          <min>0.3</min>
+          <max>30.0</max>       <!-- project spec: 30m MPS range -->
+          <resolution>0.005</resolution>  <!-- 5mm range resolution -->
+        </range>
+        <!-- Gazebo base noise; driver adds range-dependent noise on top -->
+        <noise>
+          <type>gaussian</type>
+          <mean>0.0</mean>
+          <stddev>0.005</stddev>
+        </noise>
+      </ray>
+      <plugin name="mps_ray_plugin" filename="libgazebo_ros_ray_sensor.so">
+        <ros>
+          <namespace>/mps</namespace>
+          <remapping>~/out:=raw_range</remapping>
+        </ros>
+        <output_type>sensor_msgs/Range</output_type>
+        <frame_name>mps_head_link</frame_name>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+  <!-- ============================================================
+       FORWARD-LOOKING SONAR (FLS)
+       Real plugin from Field-Robotics-Lab / Dave ecosystem —
+       specifically the ROS 2 port: forssea-robotics/nps_uw_multibeam_sonar
+       (Gazebo Classic 11, requires NVIDIA GPU + CUDA — see README).
+
+       Plugin filename, parameter tag names, and topic wiring below are
+       copied from that plugin's own reference xacro
+       (urdf/multibeam_sonar_blueview_p900.xacro) and verified against
+       its C++ source (gazebo_multibeam_sonar_raster_based.cpp), not
+       guessed. FOV/range/rate are overridden to this project's spec
+       (120° / 10m / 15Hz) — the reference file hardcodes 90°/10Hz,
+       so this block is hand-written rather than xacro:including theirs.
+
+       The plugin natively publishes BOTH:
+         <sonarImageRawTopicName> → acoustic_msgs/msg/SonarImage   (raw polar data,
+                                     full-precision — needs acoustic_msgs on your
+                                     system, see README if you want this later)
+         <sonarImageTopicName>    → sensor_msgs/msg/Image (BGR8)   (what we use —
+                                     matches the project spec directly, zero
+                                     extra bridging code needed)
+  ============================================================ -->
+
+  <link name="fls_link">
+    <visual>
+      <geometry>
+        <box size="0.05 0.10 0.06"/>
+      </geometry>
+      <material name="teal"/>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.05 0.10 0.06"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.3"/>
+      <inertia ixx="0.0005" ixy="0" ixz="0" iyy="0.0005" iyz="0" izz="0.0005"/>
+    </inertial>
+  </link>
+
+  <joint name="fls_mount_joint" type="fixed">
+    <parent link="base_link"/>
+    <!-- Front of the hull, facing +X (forward) -->
+    <origin xyz="0.36 0 0.0" rpy="0 0 0"/>
+    <child link="fls_link"/>
+  </joint>
+
+  <gazebo reference="fls_link">
+    <sensor name="fls_sensor" type="depth">
+      <visualize>true</visualize>
+      <always_on>true</always_on>
+      <update_rate>${fls_update_rate_str}</update_rate>
+      <camera>
+        <horizontal_fov>${fls_hfov_rad}</horizontal_fov>
+        <image>
+          <width>256</width>
+          <height>64</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip>
+          <near>0.1</near>
+          <far>${float(fls_max_range_str) + 2.0}</far>
+        </clip>
+        <depth_camera>
+          <output>fls_depths</output>
+        </depth_camera>
+      </camera>
+
+      <plugin filename="libnps_multibeam_sonar_ros_plugin.so" name="fls_sensor_controller">
+        <!-- Sonar physical properties (Blueview-P900-like defaults;
+             tune freely, none of these are project-specified) -->
+        <verticalFOV>20</verticalFOV>
+        <sonarFreq>900e3</sonarFreq>
+        <bandwidth>29.9e3</bandwidth>
+        <soundSpeed>1500</soundSpeed>
+        <sourceLevel>220</sourceLevel>
+        <maxDistance>${fls_max_range_str}</maxDistance>
+        <constantReflectivity>true</constantReflectivity>
+        <!-- With constantReflectivity=true this file shouldn't be read,
+             but if you hit a file-not-found error pointing here, either
+             remove this tag or drop an empty CSV at that path — I
+             couldn't verify this edge case against the source. -->
+        <reflectivityDatabaseFile>variationalReflectivityDatabase.csv</reflectivityDatabaseFile>
+        <raySkips>10</raySkips>
+        <sensorGain>0.02</sensorGain>
+        <plotScaler>0</plotScaler>
+        <writeLog>false</writeLog>
+        <debugFlag>false</debugFlag>
+        <writeFrameInterval>5</writeFrameInterval>
+        <artificialVehicleVibration>false</artificialVehicleVibration>
+        <!-- This name prefixes the camera-family topics (image_raw etc.);
+             the two topics we actually care about are set to absolute
+             paths below so they land exactly where our launch file and
+             sync node expect them, regardless of plugin node namespace. -->
+        <cameraName>fls</cameraName>
+        <imageTopicName>fls/rgb/image_raw</imageTopicName>
+        <cameraInfoTopicName>fls/rgb/camera_info</cameraInfoTopicName>
+        <pointCloudTopicName>fls/points</pointCloudTopicName>
+        <depthImageTopicName>fls/depth/image_raw</depthImageTopicName>
+        <depthImageCameraInfoTopicName>fls/depth/camera_info</depthImageCameraInfoTopicName>
+        <!-- Primary output the project spec asks for: -->
+        <sonarImageTopicName>/fls/image</sonarImageTopicName>
+        <!-- Raw polar data (acoustic_msgs/SonarImage), available if you
+             later want full-precision range/azimuth/intensity arrays
+             instead of the rendered BGR8 image: -->
+        <sonarImageRawTopicName>/fls/sonar_image_raw</sonarImageRawTopicName>
+        <frameName>fls_link</frameName>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+  <!-- ============================================================
+       IMU — standard gazebo_ros IMU sensor plugin.
+       This is the real, stock ROS 2 Humble + Gazebo Classic plugin
+       (part of gazebo_plugins), not a custom node — no uncertainty
+       here, it ships with ros-humble-gazebo-ros-pkgs.
+  ============================================================ -->
+  <link name="imu_link">
+    <visual>
+      <geometry><box size="0.03 0.03 0.02"/></geometry>
+      <material name="dark_grey"/>
+    </visual>
+    <inertial>
+      <mass value="0.05"/>
+      <inertia ixx="0.00001" ixy="0" ixz="0" iyy="0.00001" iyz="0" izz="0.00001"/>
+    </inertial>
+  </link>
+
+  <joint name="imu_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="imu_link"/>
+    <origin xyz="0 0 0.05" rpy="0 0 0"/>
+  </joint>
+
+  <gazebo reference="imu_link">
+    <sensor name="imu_sensor" type="imu">
+      <always_on>true</always_on>
+      <update_rate>100</update_rate>
+      <imu>
+        <angular_velocity>
+          <x><noise type="gaussian"><mean>0.0</mean><stddev>0.0003</stddev></noise></x>
+          <y><noise type="gaussian"><mean>0.0</mean><stddev>0.0003</stddev></noise></y>
+          <z><noise type="gaussian"><mean>0.0</mean><stddev>0.0003</stddev></noise></z>
+        </angular_velocity>
+        <linear_acceleration>
+          <x><noise type="gaussian"><mean>0.0</mean><stddev>0.017</stddev></noise></x>
+          <y><noise type="gaussian"><mean>0.0</mean><stddev>0.017</stddev></noise></y>
+          <z><noise type="gaussian"><mean>0.0</mean><stddev>0.017</stddev></noise></z>
+        </linear_acceleration>
+      </imu>
+      <plugin name="imu_plugin" filename="libgazebo_ros_imu_sensor.so">
+        <ros>
+          <namespace>/imu</namespace>
+          <remapping>~/out:=data</remapping>
+        </ros>
+        <initial_orientation_as_reference>false</initial_orientation_as_reference>
+        <frame_name>imu_link</frame_name>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+  <!-- ============================================================
+       DVL and pressure "mount points" — geometry only.
+       The actual DVL/pressure VALUES are produced by dvl_node.py and
+       pressure_node.py from ground-truth pose/twist (see README for
+       why: Dave's real DVL plugin lives in the ROS1/Noetic-era
+       nps_uw_sensors_gazebo repo with no confirmed ROS 2 port, so we
+       don't gamble the whole build on it). These links exist so both
+       sensors have a sensible TF frame and physical placement.
+  ============================================================ -->
+  <link name="dvl_link">
+    <visual>
+      <geometry><box size="0.08 0.08 0.04"/></geometry>
+      <material name="orange"/>
+    </visual>
+    <inertial>
+      <mass value="0.2"/>
+      <inertia ixx="0.0002" ixy="0" ixz="0" iyy="0.0002" iyz="0" izz="0.0002"/>
+    </inertial>
+  </link>
+
+  <joint name="dvl_joint" type="fixed">
+    <parent link="base_link"/>
+    <!-- Underside of the hull, facing down (-Z) -->
+    <origin xyz="0 0 -0.16" rpy="0 3.14159265 0"/>
+    <child link="dvl_link"/>
+  </joint>
+
+  <link name="pressure_link">
+    <visual>
+      <geometry><cylinder radius="0.015" length="0.02"/></geometry>
+      <material name="dark_grey"/>
+    </visual>
+    <inertial>
+      <mass value="0.02"/>
+      <inertia ixx="0.000005" ixy="0" ixz="0" iyy="0.000005" iyz="0" izz="0.000005"/>
+    </inertial>
+  </link>
+
+  <joint name="pressure_joint" type="fixed">
+    <parent link="base_link"/>
+    <origin xyz="-0.36 0 0" rpy="0 0 0"/>
+    <child link="pressure_link"/>
+  </joint>
+
+  <!-- ── Gazebo material overrides ─────────────────────────────── -->
+  <gazebo reference="base_link">
+    <material>Gazebo/DarkGrey</material>
+  </gazebo>
+  <gazebo reference="mps_head_link">
+    <material>Gazebo/Yellow</material>
+  </gazebo>
+  <gazebo reference="fls_link">
+    <material>Gazebo/Turquoise</material>
+  </gazebo>
+  <gazebo reference="dvl_link">
+    <material>Gazebo/Orange</material>
+  </gazebo>
+
+</robot>

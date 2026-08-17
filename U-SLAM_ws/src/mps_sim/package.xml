@@ -1,0 +1,65 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>mps_sim</name>
+  <version>0.1.0</version>
+  <description>
+    Mechanical Profiling Sonar (MPS) + Forward-Looking Sonar (FLS) fusion
+    simulation for Gazebo Classic 11 / ROS 2 Humble. MPS is a rotating
+    single-beam sonar with per-bearing timestamping so sweep distortion
+    is physically present in the data. FLS uses the real Dave-ecosystem
+    plugin (forssea-robotics/nps_uw_multibeam_sonar, requires an NVIDIA
+    GPU + CUDA — see README). sync_node.py fuses both into synchronized
+    multi-modal training tuples via a rolling MPS sector buffer gated on
+    FLS frame arrival.
+  </description>
+  <maintainer email="you@example.com">Your Name</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>ament_cmake_python</buildtool_depend>
+  <buildtool_depend>rosidl_default_generators</buildtool_depend>
+
+  <!-- Message deps -->
+  <depend>std_msgs</depend>
+  <depend>builtin_interfaces</depend>
+  <depend>nav_msgs</depend>
+
+  <!-- Node deps -->
+  <depend>rclpy</depend>
+  <depend>sensor_msgs</depend>
+  <depend>trajectory_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>gazebo_msgs</depend>
+  <exec_depend>python3-numpy</exec_depend>
+
+  <!-- Gazebo / simulation -->
+  <depend>gazebo_ros</depend>
+  <depend>gazebo_ros_pkgs</depend>
+  <depend>gazebo_plugins</depend>
+  <depend>robot_state_publisher</depend>
+  <depend>joint_state_publisher</depend>
+  <depend>xacro</depend>
+
+  <!-- ros_control -->
+  <depend>ros2_control</depend>
+  <depend>ros2_controllers</depend>
+  <depend>gazebo_ros2_control</depend>
+  <depend>joint_trajectory_controller</depend>
+  <depend>joint_state_broadcaster</depend>
+
+  <!-- NOTE: the FLS plugin itself (nps_uw_multibeam_sonar) and its
+       acoustic_msgs dependency are EXTERNAL packages this project does
+       not vendor or declare a rosdep key for — they're built from
+       source in your workspace per the README's install steps, not
+       pulled in automatically by this package.xml. rosdep does not
+       know about them. -->
+
+  <exec_depend>rosidl_default_runtime</exec_depend>
+
+  <member_of_group>rosidl_interface_packages</member_of_group>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

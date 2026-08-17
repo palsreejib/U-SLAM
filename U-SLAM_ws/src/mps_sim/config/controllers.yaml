@@ -1,0 +1,39 @@
+# controllers.yaml
+# ros2_control configuration for the MPS rotating head joint.
+#
+# The gazebo_ros2_control plugin reads this file (path passed via URDF plugin tag).
+# We use a JointTrajectoryController in position mode — the driver node sends
+# single-point trajectories to move the head to each bearing angle.
+
+controller_manager:
+  ros__parameters:
+    update_rate: 100  # Hz — must be >= sonar step rate
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    mps_rotate_joint_position_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+
+joint_state_broadcaster:
+  ros__parameters:
+    use_sim_time: true
+
+mps_rotate_joint_position_controller:
+  ros__parameters:
+    joints:
+      - mps_rotate_joint
+    command_interfaces:
+      - position
+    state_interfaces:
+      - position
+      - velocity
+    # Allow the joint to wrap around (continuous rotation)
+    allow_nonzero_velocity_at_trajectory_end: true
+    # Goal tolerance — how close the joint needs to be before
+    # the trajectory point is considered reached
+    goal_time: 0.5
+    goal_tolerance:
+      - name: mps_rotate_joint
+        position: 0.01   # ~0.57 degrees
+        velocity: 0.1
