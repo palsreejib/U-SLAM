@@ -1,62 +1,97 @@
+<div align="center">
+
 # U-SLAM
 
-This repository contains a work-in-progress underwater SLAM (Simultaneous Localization and Mapping) system for an Autonomous Underwater Vehicle (AUV), developed entirely using **Python** and **ROS2**.
+### Underwater SLAM
+
+<p>
+  <strong>ROS 2 · Gazebo · Underwater Robotics · Sensor Fusion · SLAM</strong>
+</p>
+
+<p>
+  <a href="https://github.com/palsreejib/U-SLAM">
+    <img src="https://img.shields.io/badge/ROS%202-Humble-22314E?style=for-the-badge&logo=ros" alt="ROS 2">
+  </a>
+  <a href="https://gazebosim.org/">
+    <img src="https://img.shields.io/badge/Gazebo-Simulation-FF6F00?style=for-the-badge" alt="Gazebo">
+  </a>
+  <a href="https://github.com/palsreejib/U-SLAM">
+    <img src="https://img.shields.io/github/repo-size/palsreejib/U-SLAM?style=for-the-badge" alt="Repository Size">
+  </a>
+</p>
+
+<p>
+  <em>
+    A simulation and research framework for underwater perception,
+    localization, mapping, and SLAM.
+  </em>
+</p>
+
+</div>
 
 ---
 
-## Project Motivation
+U-SLAM is a research project for developing and evaluating **Simultaneous Localization and Mapping (SLAM)** approaches for underwater autonomous systems.
 
-Underwater navigation is notoriously difficult due to:
-- Lack of GPS
-- Sensor noise and poor visibility
-- Challenging environments (murky water, reflections)
+The project provides a ROS 2 and Gazebo-based simulation environment for integrating underwater vehicle dynamics, hydrographic sensors, acoustic perception, and ground-truth information. The framework is intended to support controlled experiments in underwater localization, sensor fusion, mapping, and SLAM.
 
-This project aims to solve these challenges by building a robust **SLAM pipeline** that combines multiple sensor modalities to **localize an AUV** and **generate a 3D map** of its underwater environment.
+> **Status:** Active Development
 
 ---
 
-## Project Goal
+## Motivation
 
-- **ORB feature extraction from image/camera data**
-- **Fuse visual, DVL, and SONAR data** to map unknown environments  
-- **Localize the AUV in 3D space** using a **particle filter** approach  
-- **Visualize the result in RViz2** using an AUV URDF; may move to Pangolin  
-- **Fully ROS2-compliant Python implementation** (no C++ or cloning ORB-SLAM3)
-- Final goal: Real-time underwater SLAM system for robotics/**defense applications**
+Reliable localization is a fundamental challenge for underwater autonomous systems. Unlike terrestrial and aerial environments, GPS is generally unavailable underwater, making autonomous navigation dependent on onboard sensing.
 
----
+U-SLAM is motivated by the need for a reproducible environment in which different sensing modalities and localization approaches can be studied under controlled conditions.
 
-## Current Status
-
-This project is still **under active development**.  
-The following modules are being built:
-
-- Image-based feature tracking and mapping  
-- Particle filter localization using DVL and visual input  
-- SONAR loop closure using .xtf files  
-- ROS2 package organization for modular design  
-- RViz2-based visualization with URDF-based AUV model  
+The project focuses on combining simulated underwater sensing with ground-truth data to enable systematic development and evaluation of SLAM algorithms.
 
 ---
 
-## Dataset Assumptions
+## Current System
 
-The system expects:
-- **Image data** (monocular or stereo)
-- **DVL odometry** in CSV format
-- **SONAR data** in `.xtf` format
-- A **URDF model** of the AUV
+The current implementation establishes the simulation and sensing foundation for the project.
 
----
+It includes:
 
-## Disclaimer
+- Underwater vehicle simulation in Gazebo
+- Hydrographic and acoustic ROS 2 message interfaces
+- DVL simulation
+- Pressure/depth sensing
+- Ground-truth state information
+- Sensor synchronization
+- Multibeam sonar simulation
+- Underwater environments and models
 
-This repository is an evolving research and engineering project.  
-Expect:
-- Partial/incomplete features
-- Refactoring over time
-- Documentation to grow alongside development 
-sreejib1945@gmail.com  
+These components form the infrastructure on which the SLAM and evaluation pipeline will be developed.
 
 ---
 
+## System Architecture
+
+```text
+                    U-SLAM
+                       │
+        ┌──────────────┴──────────────┐
+        │                             │
+   Simulation                    Sensor Layer
+        │                             │
+        │                ┌────────────┼────────────┐
+        │                │            │            │
+        │               IMU          DVL       Multibeam
+        │                            │            Sonar
+        │                │            │            │
+        └────────────────┴────────────┴────────────┘
+                             │
+                             ▼
+                    Data Synchronization
+                             │
+                             ▼
+                    Dataset Generation
+                             │
+                             ▼
+                       SLAM Pipeline
+                             │
+                             ▼
+                         Evaluation
